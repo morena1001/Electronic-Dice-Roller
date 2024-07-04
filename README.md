@@ -11,7 +11,7 @@ The external button that controls the "rolling" of the die is connected to pin P
 The light controlling the top left LED in the electronic die is connected to pin PA1 via the CN8 connector, pin 2, named A1. The configuration of PA1 and the rest of the six lights controlling the other LEDs in the die are as follows. The output level is "Low", the mode is "Output Push Pull", there is no pull-up or pull-down, and the Maximum output speed is "Low".    
 
 ##### *PA4*
-The light controlling the middle left LED in the die is connected to pin PA4 via the CN8 connector, pin 2, named A2.
+The light controlling the middle left LED in the die is connected to pin PA4 via the CN8 connector, pin 3, named A2.
 
 ##### *PA5*
 The light controlling the bottom left LED in the die is connected to pin PA5 via the CN10 connector, pin 30, named D4.
@@ -26,4 +26,4 @@ The light controlling the bottom right LED in the die is connected to pin PA7 vi
 The light controlling the middle right LED in the die is connected to pin PA8 via the CN9 connector, pin 8, named D7.
 
 ##### *PA9*
-The light controlling the top left LED in the die is connected to pin PA9 via the CN5 connector, pin 5, named D8.
+The light controlling the top right LED in the die is connected to pin PA9 via the CN5 connector, pin 1, named D8.
