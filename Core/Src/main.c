@@ -42,18 +42,22 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+TIM_HandleTypeDef htim2;
+
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 char msg[20];
 uint_least8_t toggle = 0;
-time_t timeSeed;
+int previousGeneratedNumber = 0;
+uint8_t firstTime = 1;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 static void NumberOne(void);
 static void NumberTwo(void);
@@ -76,7 +80,6 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -98,8 +101,11 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-  srand((unsigned) time(&timeSeed));
+//  srand((unsigned) time(&timeSeed)););
+//  srand(1000 * (timeSeed2 - timeSeed1) / CLOCKS_PER_SEC);
+  HAL_TIM_Base_Start(&htim2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -109,21 +115,18 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//	  if (!HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)) {
-//		  if (!toggle) {
-//			  sprintf(msg, "HI\r\n");
-//			  HAL_UART_Transmit(&huart2, (uint8_t*) msg, 10, 100);
-//			  toggle = 1;
-//		  }
-//	  } else {
-//		  toggle = 0;
-//	  }
-
 	  if (HAL_GPIO_ReadPin(Roll_GPIO_Port, Roll_Pin)) {
-		  if (!toggle) {
+		  for (int i = 0; i < 65535; i++);
+		  if (!toggle && !firstTime) {
+			  toggle = 1;
+			  srand(__HAL_TIM_GET_COUNTER(&htim2));
 			  int generatedNumber = (rand() % 6) + 1;
+			  while (generatedNumber == previousGeneratedNumber) {
+				  generatedNumber = (rand() % 6) + 1;
+			  }
 			  sprintf(msg, "%d\r\n", generatedNumber);
 			  HAL_UART_Transmit(&huart2, (uint8_t*) msg, 10, 100);
+			  previousGeneratedNumber = generatedNumber;
 
 			  switch(generatedNumber) {
 			  case 1:
@@ -145,31 +148,11 @@ int main(void)
 				  NumberSix();
 				  break;
 			  }
-			  toggle = 1;
 		  }
 	  } else {
 		  toggle = 0;
+		  firstTime = 0;
 	  }
-
-//	  sprintf(msg, "%d\r\n", (rand() % 6) + 1);
-//	  HAL_UART_Transmit(&huart2, (uint8_t*) msg, 10, 100);
-//	  HAL_GPIO_TogglePin(GPIOA, MC_Pin);
-//	  HAL_Delay(500);
-
-//	  NumberOne();
-//	  HAL_Delay(500);
-//	  NumberTwo();
-//	  HAL_Delay(500);
-//	  NumberThree();
-//	  HAL_Delay(500);
-//	  NumberFour();
-//	  HAL_Delay(500);
-//	  NumberFive();
-//	  HAL_Delay(500);
-//	  NumberSix();
-//	  HAL_Delay(500);
-
-
   }
   /* USER CODE END 3 */
 }
@@ -208,6 +191,51 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 0;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 4294967295;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+
 }
 
 /**
