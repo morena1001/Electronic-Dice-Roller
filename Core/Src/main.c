@@ -43,14 +43,15 @@
 
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim6;
 
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-char msg[20];
-uint_least8_t toggle = 0;
-int previousGeneratedNumber = 0;
-uint8_t firstTime = 1;
+//char msg[20];
+//uint_8_t toggle = 0;
+//int previousGeneratedNumber = 0;
+//uint8_t firstTime = 1;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -58,13 +59,14 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM2_Init(void);
+static void MX_TIM6_Init(void);
 /* USER CODE BEGIN PFP */
-static void NumberOne(void);
-static void NumberTwo(void);
-static void NumberThree(void);
-static void NumberFour(void);
-static void NumberFive(void);
-static void NumberSix(void);
+//static void NumberOne(void);
+//static void NumberTwo(void);
+//static void NumberThree(void);
+//static void NumberFour(void);
+//static void NumberFive(void);
+//static void NumberSix(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -102,10 +104,12 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   MX_TIM2_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
-//  srand((unsigned) time(&timeSeed)););
-//  srand(1000 * (timeSeed2 - timeSeed1) / CLOCKS_PER_SEC);
   HAL_TIM_Base_Start(&htim2);
+  HAL_NVIC_SetPriority(TIM6_DAC_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(TIM6_DAC_IRQn);
+  HAL_TIM_Base_Start_IT(&htim6);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -115,44 +119,44 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  if (HAL_GPIO_ReadPin(Roll_GPIO_Port, Roll_Pin)) {
-		  for (int i = 0; i < 65535; i++);
-		  if (!toggle && !firstTime) {
-			  toggle = 1;
-			  srand(__HAL_TIM_GET_COUNTER(&htim2));
-			  int generatedNumber = (rand() % 6) + 1;
-			  while (generatedNumber == previousGeneratedNumber) {
-				  generatedNumber = (rand() % 6) + 1;
-			  }
-			  sprintf(msg, "%d\r\n", generatedNumber);
-			  HAL_UART_Transmit(&huart2, (uint8_t*) msg, 10, 100);
-			  previousGeneratedNumber = generatedNumber;
-
-			  switch(generatedNumber) {
-			  case 1:
-				  NumberOne();
-				  break;
-			  case 2:
-				  NumberTwo();
-				  break;
-			  case 3:
-				  NumberThree();
-				  break;
-			  case 4:
-				  NumberFour();
-				  break;
-			  case 5:
-				  NumberFive();
-				  break;
-			  case 6:
-				  NumberSix();
-				  break;
-			  }
-		  }
-	  } else {
-		  toggle = 0;
-		  firstTime = 0;
-	  }
+//	  if (HAL_GPIO_ReadPin(Roll_GPIO_Port, Roll_Pin)) {
+//		  for (int i = 0; i < 65535; i++);
+//		  if (!toggle && !firstTime) {
+//			  toggle = 1;
+//			  srand(__HAL_TIM_GET_COUNTER(&htim2));
+//			  int generatedNumber = (rand() % 6) + 1;
+//			  while (generatedNumber == previousGeneratedNumber) {
+//				  generatedNumber = (rand() % 6) + 1;
+//			  }
+//			  sprintf(msg, "%d\r\n", generatedNumber);
+//			  HAL_UART_Transmit(&huart2, (uint8_t*) msg, 10, 100);
+//			  previousGeneratedNumber = generatedNumber;
+//
+//			  switch(generatedNumber) {
+//			  case 1:
+//				  NumberOne();
+//				  break;
+//			  case 2:
+//				  NumberTwo();
+//				  break;
+//			  case 3:
+//				  NumberThree();
+//				  break;
+//			  case 4:
+//				  NumberFour();
+//				  break;
+//			  case 5:
+//				  NumberFive();
+//				  break;
+//			  case 6:
+//				  NumberSix();
+//				  break;
+//			  }
+//		  }
+//	  } else {
+//		  toggle = 0;
+//		  firstTime = 0;
+//	  }
   }
   /* USER CODE END 3 */
 }
@@ -239,6 +243,44 @@ static void MX_TIM2_Init(void)
 }
 
 /**
+  * @brief TIM6 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM6_Init(void)
+{
+
+  /* USER CODE BEGIN TIM6_Init 0 */
+
+  /* USER CODE END TIM6_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM6_Init 1 */
+
+  /* USER CODE END TIM6_Init 1 */
+  htim6.Instance = TIM6;
+  htim6.Init.Prescaler = 39;
+  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim6.Init.Period = 799;
+  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM6_Init 2 */
+
+  /* USER CODE END TIM6_Init 2 */
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -285,22 +327,11 @@ static void MX_GPIO_Init(void)
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, TL_Pin|ML_Pin|BL_Pin|MC_Pin
                           |BR_Pin|MR_Pin|TR_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin : B1_Pin */
-  GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : TL_Pin ML_Pin BL_Pin MC_Pin
                            BR_Pin MR_Pin TR_Pin */
@@ -311,53 +342,50 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : LD2_Pin */
-  GPIO_InitStruct.Pin = LD2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
-
   /*Configure GPIO pin : Roll_Pin */
   GPIO_InitStruct.Pin = Roll_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(Roll_GPIO_Port, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
-static void NumberOne(void) {
-	HAL_GPIO_WritePin(GPIOA, TL_Pin | ML_Pin | BL_Pin | TR_Pin | MR_Pin | BR_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOA, MC_Pin, GPIO_PIN_SET);
-}
-
-static void NumberTwo(void) {
-	HAL_GPIO_WritePin(GPIOA, TL_Pin | ML_Pin | MC_Pin | MR_Pin | BR_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOA, BL_Pin | TR_Pin, GPIO_PIN_SET);
-}
-
-static void NumberThree(void) {
-	HAL_GPIO_WritePin(GPIOA, TL_Pin | ML_Pin | MR_Pin | BR_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOA, BL_Pin | MC_Pin | TR_Pin, GPIO_PIN_SET);
-}
-
-static void NumberFour(void) {
-	HAL_GPIO_WritePin(GPIOA, ML_Pin | MC_Pin | MR_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOA, TL_Pin | BL_Pin | TR_Pin | BR_Pin, GPIO_PIN_SET);
-}
-
-static void NumberFive(void) {
-	HAL_GPIO_WritePin(GPIOA, ML_Pin | MR_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOA, TL_Pin | BL_Pin | MC_Pin | TR_Pin | BR_Pin, GPIO_PIN_SET);
-}
-
-static void NumberSix(void) {
-	HAL_GPIO_WritePin(GPIOA, MC_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOA, TL_Pin | ML_Pin | BL_Pin | TR_Pin | MR_Pin | BR_Pin, GPIO_PIN_SET);
-}
+//static void NumberOne(void) {
+//	HAL_GPIO_WritePin(GPIOA, TL_Pin | ML_Pin | BL_Pin | TR_Pin | MR_Pin | BR_Pin, GPIO_PIN_RESET);
+//	HAL_GPIO_WritePin(GPIOA, MC_Pin, GPIO_PIN_SET);
+//}
+//
+//static void NumberTwo(void) {
+//	HAL_GPIO_WritePin(GPIOA, TL_Pin | ML_Pin | MC_Pin | MR_Pin | BR_Pin, GPIO_PIN_RESET);
+//	HAL_GPIO_WritePin(GPIOA, BL_Pin | TR_Pin, GPIO_PIN_SET);
+//}
+//
+//static void NumberThree(void) {
+//	HAL_GPIO_WritePin(GPIOA, TL_Pin | ML_Pin | MR_Pin | BR_Pin, GPIO_PIN_RESET);
+//	HAL_GPIO_WritePin(GPIOA, BL_Pin | MC_Pin | TR_Pin, GPIO_PIN_SET);
+//}
+//
+//static void NumberFour(void) {
+//	HAL_GPIO_WritePin(GPIOA, ML_Pin | MC_Pin | MR_Pin, GPIO_PIN_RESET);
+//	HAL_GPIO_WritePin(GPIOA, TL_Pin | BL_Pin | TR_Pin | BR_Pin, GPIO_PIN_SET);
+//}
+//
+//static void NumberFive(void) {
+//	HAL_GPIO_WritePin(GPIOA, ML_Pin | MR_Pin, GPIO_PIN_RESET);
+//	HAL_GPIO_WritePin(GPIOA, TL_Pin | BL_Pin | MC_Pin | TR_Pin | BR_Pin, GPIO_PIN_SET);
+//}
+//
+//static void NumberSix(void) {
+//	HAL_GPIO_WritePin(GPIOA, MC_Pin, GPIO_PIN_RESET);
+//	HAL_GPIO_WritePin(GPIOA, TL_Pin | ML_Pin | BL_Pin | TR_Pin | MR_Pin | BR_Pin, GPIO_PIN_SET);
+//}
 /* USER CODE END 4 */
 
 /**

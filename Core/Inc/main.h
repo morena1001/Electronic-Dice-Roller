@@ -57,8 +57,6 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define B1_Pin GPIO_PIN_13
-#define B1_GPIO_Port GPIOC
 #define TL_Pin GPIO_PIN_1
 #define TL_GPIO_Port GPIOA
 #define ML_Pin GPIO_PIN_4
@@ -69,14 +67,13 @@ void Error_Handler(void);
 #define MC_GPIO_Port GPIOA
 #define BR_Pin GPIO_PIN_7
 #define BR_GPIO_Port GPIOA
-#define LD2_Pin GPIO_PIN_13
-#define LD2_GPIO_Port GPIOB
 #define MR_Pin GPIO_PIN_8
 #define MR_GPIO_Port GPIOA
 #define TR_Pin GPIO_PIN_9
 #define TR_GPIO_Port GPIOA
 #define Roll_Pin GPIO_PIN_10
 #define Roll_GPIO_Port GPIOA
+#define Roll_EXTI_IRQn EXTI15_10_IRQn
 
 /* USER CODE BEGIN Private defines */
 
