@@ -24,8 +24,9 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <stdbool.h>
+#include <time.h>
+#include "liquidcrystal_i2c.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,7 +46,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-char msg[10];
+char uart_message[10];
+char i2c_message[5];
 
 bool toggle = false;
 
@@ -55,7 +57,12 @@ uint8_t previous_generated_number = 0;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
-
+static void Number_One(void);
+static void Number_Two(void);
+static void Number_Three(void);
+static void Number_Four(void);
+static void Number_Five(void);
+static void Number_Six(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -68,12 +75,7 @@ extern TIM_HandleTypeDef htim6;
 /* USER CODE BEGIN EV */
 extern TIM_HandleTypeDef htim2;
 extern UART_HandleTypeDef huart2;
-static void NumberOne(void);
-static void NumberTwo(void);
-static void NumberThree(void);
-static void NumberFour(void);
-static void NumberFive(void);
-static void NumberSix(void);
+extern I2C_HandleTypeDef hi2c1;
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -245,28 +247,33 @@ void TIM6_DAC_IRQHandler(void)
 				generated_number = (rand() % 6) + 1;
 			}
 
-			sprintf(msg, "%d\r\n", generated_number);
-			HAL_UART_Transmit(&huart2, (uint8_t*) msg, 3, 100);
+			sprintf(uart_message, "%d\r\n", generated_number);
+			HAL_UART_Transmit(&huart2, (uint8_t*) uart_message, 3, 100);
+
+			sprintf(i2c_message, "%d", generated_number);
+			HD44780_SetCursor(0, 0);
+			HD44780_PrintStr(&i2c_message[0]);
+
 			previous_generated_number = generated_number;
 
 			switch(generated_number) {
 			case 1:
-				NumberOne();
+				Number_One();
 				break;
 			case 2:
-				NumberTwo();
+				Number_Two();
 				break;
 			case 3:
-				NumberThree();
+				Number_Three();
 				break;
 			case 4:
-				NumberFour();
+				Number_Four();
 				break;
 			case 5:
-				NumberFive();
+				Number_Five();
 				break;
 			case 6:
-				NumberSix();
+				Number_Six();
 				break;
 			}
 		}
@@ -281,108 +288,33 @@ void TIM6_DAC_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
-static void NumberOne(void) {
+static void Number_One(void) {
 	HAL_GPIO_WritePin(GPIOA, TL_Pin | ML_Pin | BL_Pin | TR_Pin | MR_Pin | BR_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOA, MC_Pin, GPIO_PIN_SET);
 }
 
-static void NumberTwo(void) {
+static void Number_Two(void) {
 	HAL_GPIO_WritePin(GPIOA, TL_Pin | ML_Pin | MC_Pin | MR_Pin | BR_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOA, BL_Pin | TR_Pin, GPIO_PIN_SET);
 }
 
-static void NumberThree(void) {
+static void Number_Three(void) {
 	HAL_GPIO_WritePin(GPIOA, TL_Pin | ML_Pin | MR_Pin | BR_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOA, BL_Pin | MC_Pin | TR_Pin, GPIO_PIN_SET);
 }
 
-static void NumberFour(void) {
+static void Number_Four(void) {
 	HAL_GPIO_WritePin(GPIOA, ML_Pin | MC_Pin | MR_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOA, TL_Pin | BL_Pin | TR_Pin | BR_Pin, GPIO_PIN_SET);
 }
 
-static void NumberFive(void) {
+static void Number_Five(void) {
 	HAL_GPIO_WritePin(GPIOA, ML_Pin | MR_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOA, TL_Pin | BL_Pin | MC_Pin | TR_Pin | BR_Pin, GPIO_PIN_SET);
 }
 
-static void NumberSix(void) {
+static void Number_Six(void) {
 	HAL_GPIO_WritePin(GPIOA, MC_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(GPIOA, TL_Pin | ML_Pin | BL_Pin | TR_Pin | MR_Pin | BR_Pin, GPIO_PIN_SET);
 }
-
-//	for (int i = 0; i < 16383; i++);
-//
-//	if (HAL_GPIO_ReadPin(Roll_GPIO_Port, Roll_Pin)) {
-//		srand(__HAL_TIM_GET_COUNTER(&htim2));
-//		generated_number = (rand() % 6) + 1;
-//
-//		while (generated_number == previous_generated_number) {
-//			generated_number = (rand() % 6) + 1;
-//		}
-//
-//		sprintf(msg, "%d\r\n", generated_number);
-//		HAL_UART_Transmit(&huart2, (uint8_t*) msg, 3, 100);
-//		previous_generated_number = generated_number;
-//
-//		switch(generated_number) {
-//		case 1:
-//			NumberOne();
-//			break;
-//		case 2:
-//			NumberTwo();
-//			break;
-//		case 3:
-//			NumberThree();
-//			break;
-//		case 4:
-//			NumberFour();
-//			break;
-//		case 5:
-//			NumberFive();
-//			break;
-//		case 6:
-//			NumberSix();
-//			break;
-//		}
-//	}
-
-//	 if (HAL_GPIO_ReadPin(Roll_GPIO_Port, Roll_Pin)) {
-//		  for (int i = 0; i < 65535; i++);
-//		  if (!toggle && !firstTime) {
-//			  toggle = 1;
-//			  srand(__HAL_TIM_GET_COUNTER(&htim2));
-//			  int generatedNumber = (rand() % 6) + 1;
-//			  while (generatedNumber == previousGeneratedNumber) {
-//				  generatedNumber = (rand() % 6) + 1;
-//			  }
-//			  sprintf(msg, "%d\r\n", generatedNumber);
-//			  HAL_UART_Transmit(&huart2, (uint8_t*) msg, 10, 100);
-//			  previousGeneratedNumber = generatedNumber;
-//
-//			  switch(generatedNumber) {
-//			  case 1:
-//				  NumberOne();
-//				  break;
-//			  case 2:
-//				  NumberTwo();
-//				  break;
-//			  case 3:
-//				  NumberThree();
-//				  break;
-//			  case 4:
-//				  NumberFour();
-//				  break;
-//			  case 5:
-//				  NumberFive();
-//				  break;
-//			  case 6:
-//				  NumberSix();
-//				  break;
-//			  }
-//		  }
-//	  } else {
-//		  toggle = 0;
-//		  firstTime = 0;
-//	  }
 /* USER CODE END 1 */

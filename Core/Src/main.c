@@ -21,9 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "stdio.h"
-#include "stdlib.h"
-#include <time.h>
+#include "liquidcrystal_i2c.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -42,16 +40,15 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+I2C_HandleTypeDef hi2c1;
+
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim6;
 
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-//char msg[20];
-//uint_8_t toggle = 0;
-//int previousGeneratedNumber = 0;
-//uint8_t firstTime = 1;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -60,13 +57,9 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM6_Init(void);
+static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
-//static void NumberOne(void);
-//static void NumberTwo(void);
-//static void NumberThree(void);
-//static void NumberFour(void);
-//static void NumberFive(void);
-//static void NumberSix(void);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -82,6 +75,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -105,11 +99,15 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM2_Init();
   MX_TIM6_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start(&htim2);
   HAL_NVIC_SetPriority(TIM6_DAC_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(TIM6_DAC_IRQn);
   HAL_TIM_Base_Start_IT(&htim6);
+
+  HD44780_Init(2);
+  HD44780_Clear();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -119,44 +117,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//	  if (HAL_GPIO_ReadPin(Roll_GPIO_Port, Roll_Pin)) {
-//		  for (int i = 0; i < 65535; i++);
-//		  if (!toggle && !firstTime) {
-//			  toggle = 1;
-//			  srand(__HAL_TIM_GET_COUNTER(&htim2));
-//			  int generatedNumber = (rand() % 6) + 1;
-//			  while (generatedNumber == previousGeneratedNumber) {
-//				  generatedNumber = (rand() % 6) + 1;
-//			  }
-//			  sprintf(msg, "%d\r\n", generatedNumber);
-//			  HAL_UART_Transmit(&huart2, (uint8_t*) msg, 10, 100);
-//			  previousGeneratedNumber = generatedNumber;
-//
-//			  switch(generatedNumber) {
-//			  case 1:
-//				  NumberOne();
-//				  break;
-//			  case 2:
-//				  NumberTwo();
-//				  break;
-//			  case 3:
-//				  NumberThree();
-//				  break;
-//			  case 4:
-//				  NumberFour();
-//				  break;
-//			  case 5:
-//				  NumberFive();
-//				  break;
-//			  case 6:
-//				  NumberSix();
-//				  break;
-//			  }
-//		  }
-//	  } else {
-//		  toggle = 0;
-//		  firstTime = 0;
-//	  }
   }
   /* USER CODE END 3 */
 }
@@ -169,14 +129,19 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -186,15 +151,69 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
     Error_Handler();
   }
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C1;
+  PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.Timing = 0x2000090E;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Analogue filter
+  */
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Digital filter
+  */
+  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
+
 }
 
 /**
@@ -260,7 +279,7 @@ static void MX_TIM6_Init(void)
 
   /* USER CODE END TIM6_Init 1 */
   htim6.Instance = TIM6;
-  htim6.Init.Prescaler = 39;
+  htim6.Init.Prescaler = 359;
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim6.Init.Period = 799;
   htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -327,7 +346,9 @@ static void MX_GPIO_Init(void)
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, TL_Pin|ML_Pin|BL_Pin|MC_Pin
@@ -357,35 +378,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-//static void NumberOne(void) {
-//	HAL_GPIO_WritePin(GPIOA, TL_Pin | ML_Pin | BL_Pin | TR_Pin | MR_Pin | BR_Pin, GPIO_PIN_RESET);
-//	HAL_GPIO_WritePin(GPIOA, MC_Pin, GPIO_PIN_SET);
-//}
-//
-//static void NumberTwo(void) {
-//	HAL_GPIO_WritePin(GPIOA, TL_Pin | ML_Pin | MC_Pin | MR_Pin | BR_Pin, GPIO_PIN_RESET);
-//	HAL_GPIO_WritePin(GPIOA, BL_Pin | TR_Pin, GPIO_PIN_SET);
-//}
-//
-//static void NumberThree(void) {
-//	HAL_GPIO_WritePin(GPIOA, TL_Pin | ML_Pin | MR_Pin | BR_Pin, GPIO_PIN_RESET);
-//	HAL_GPIO_WritePin(GPIOA, BL_Pin | MC_Pin | TR_Pin, GPIO_PIN_SET);
-//}
-//
-//static void NumberFour(void) {
-//	HAL_GPIO_WritePin(GPIOA, ML_Pin | MC_Pin | MR_Pin, GPIO_PIN_RESET);
-//	HAL_GPIO_WritePin(GPIOA, TL_Pin | BL_Pin | TR_Pin | BR_Pin, GPIO_PIN_SET);
-//}
-//
-//static void NumberFive(void) {
-//	HAL_GPIO_WritePin(GPIOA, ML_Pin | MR_Pin, GPIO_PIN_RESET);
-//	HAL_GPIO_WritePin(GPIOA, TL_Pin | BL_Pin | MC_Pin | TR_Pin | BR_Pin, GPIO_PIN_SET);
-//}
-//
-//static void NumberSix(void) {
-//	HAL_GPIO_WritePin(GPIOA, MC_Pin, GPIO_PIN_RESET);
-//	HAL_GPIO_WritePin(GPIOA, TL_Pin | ML_Pin | BL_Pin | TR_Pin | MR_Pin | BR_Pin, GPIO_PIN_SET);
-//}
 /* USER CODE END 4 */
 
 /**
