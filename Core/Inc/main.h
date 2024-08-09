@@ -57,20 +57,6 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define TL_Pin GPIO_PIN_1
-#define TL_GPIO_Port GPIOA
-#define ML_Pin GPIO_PIN_4
-#define ML_GPIO_Port GPIOA
-#define BL_Pin GPIO_PIN_5
-#define BL_GPIO_Port GPIOA
-#define MC_Pin GPIO_PIN_6
-#define MC_GPIO_Port GPIOA
-#define BR_Pin GPIO_PIN_7
-#define BR_GPIO_Port GPIOA
-#define MR_Pin GPIO_PIN_8
-#define MR_GPIO_Port GPIOA
-#define TR_Pin GPIO_PIN_9
-#define TR_GPIO_Port GPIOA
 #define Roll_Pin GPIO_PIN_10
 #define Roll_GPIO_Port GPIOA
 #define Roll_EXTI_IRQn EXTI15_10_IRQn

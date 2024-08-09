@@ -57,12 +57,7 @@ uint8_t previous_generated_number = 0;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
-static void Number_One(void);
-static void Number_Two(void);
-static void Number_Three(void);
-static void Number_Four(void);
-static void Number_Five(void);
-static void Number_Six(void);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -255,27 +250,6 @@ void TIM6_DAC_IRQHandler(void)
 			HD44780_PrintStr(&i2c_message[0]);
 
 			previous_generated_number = generated_number;
-
-			switch(generated_number) {
-			case 1:
-				Number_One();
-				break;
-			case 2:
-				Number_Two();
-				break;
-			case 3:
-				Number_Three();
-				break;
-			case 4:
-				Number_Four();
-				break;
-			case 5:
-				Number_Five();
-				break;
-			case 6:
-				Number_Six();
-				break;
-			}
 		}
 	} else {
 		toggle = false;
@@ -288,33 +262,5 @@ void TIM6_DAC_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
-static void Number_One(void) {
-	HAL_GPIO_WritePin(GPIOA, TL_Pin | ML_Pin | BL_Pin | TR_Pin | MR_Pin | BR_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOA, MC_Pin, GPIO_PIN_SET);
-}
 
-static void Number_Two(void) {
-	HAL_GPIO_WritePin(GPIOA, TL_Pin | ML_Pin | MC_Pin | MR_Pin | BR_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOA, BL_Pin | TR_Pin, GPIO_PIN_SET);
-}
-
-static void Number_Three(void) {
-	HAL_GPIO_WritePin(GPIOA, TL_Pin | ML_Pin | MR_Pin | BR_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOA, BL_Pin | MC_Pin | TR_Pin, GPIO_PIN_SET);
-}
-
-static void Number_Four(void) {
-	HAL_GPIO_WritePin(GPIOA, ML_Pin | MC_Pin | MR_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOA, TL_Pin | BL_Pin | TR_Pin | BR_Pin, GPIO_PIN_SET);
-}
-
-static void Number_Five(void) {
-	HAL_GPIO_WritePin(GPIOA, ML_Pin | MR_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOA, TL_Pin | BL_Pin | MC_Pin | TR_Pin | BR_Pin, GPIO_PIN_SET);
-}
-
-static void Number_Six(void) {
-	HAL_GPIO_WritePin(GPIOA, MC_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOA, TL_Pin | ML_Pin | BL_Pin | TR_Pin | MR_Pin | BR_Pin, GPIO_PIN_SET);
-}
 /* USER CODE END 1 */
